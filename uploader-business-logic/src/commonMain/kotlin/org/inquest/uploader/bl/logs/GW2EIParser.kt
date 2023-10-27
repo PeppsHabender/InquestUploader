@@ -1,5 +1,6 @@
 package org.inquest.uploader.bl.logs
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -205,7 +206,9 @@ internal class GW2EIParser(
         private val GW2EI_ZIP_PATH: Path = GW2EI_PARENT.resolve("$GW2_EI_STR.zip")
         private val GW2EI_PATH: Path = GW2EI_PARENT.resolve(GW2_EI_EXE)
 
-        private val OBJECT_MAPPER = ObjectMapper().registerKotlinModule()
+        private val OBJECT_MAPPER = ObjectMapper()
+            .registerKotlinModule()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 }
 

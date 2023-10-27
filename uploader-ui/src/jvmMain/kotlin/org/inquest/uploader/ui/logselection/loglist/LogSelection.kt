@@ -48,7 +48,6 @@ import org.kodein.di.DI
 import org.kodein.di.bindSingleton
 import org.kodein.di.instance
 import java.io.Serial
-import kotlin.io.path.name
 
 /**
  * Display all logs for the given [boss].
@@ -119,7 +118,7 @@ internal data object BossSelectionView : View {
                 val commonMod: Modifier = Modifier.size(100.dp, 150.dp).padding(2.dp)
 
                 val icon: String? = if(it.name in folderToBoss.folderToBoss) "/images/bosses/${folderToBoss[it.name]}.png" else null
-                if(icon == null || this::class.java.getResource(icon!!) == null) {
+                if(icon == null || this::class.java.getResource(icon) == null) {
                     it.NoImageBossButton(commonMod, nav)
                     return@items
                 }

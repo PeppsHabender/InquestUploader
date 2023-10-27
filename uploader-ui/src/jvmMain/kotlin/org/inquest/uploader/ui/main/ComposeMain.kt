@@ -19,18 +19,21 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
+import androidx.compose.ui.window.LocalWindowExceptionHandlerFactory
 import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
@@ -60,6 +63,7 @@ import kotlin.concurrent.thread
 /**
  * Main entry point to the compose part of the application.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun ApplicationScope.InquestUploader() {
     val windowState = InitialWindowState()
@@ -95,20 +99,27 @@ internal fun ApplicationScope.InquestUploader() {
         return
     }
 
-    Window(
-        onCloseRequest = { open = false },
-        undecorated = true,
-        resizable = false,
-        state = windowState,
-        icon = painterResource("/images/inquest/inquest_logo.svg")
+    CompositionLocalProvider(
+        LocalWindowExceptionHandlerFactory provides WindowExceptionFunctionHandler {
+            cancelWatchers()
+            exitApplication()
+        }
     ) {
-        InquestTheme {
-            DecoratedWindow(
-                closeApp = { open = false },
-                modifier = Modifier.fillMaxSize(),
-                minimizeApp = { windowState.isMinimized = true },
-            ) {
-                MainView()
+        Window(
+            onCloseRequest = { open = false },
+            undecorated = true,
+            resizable = false,
+            state = windowState,
+            icon = painterResource("/images/inquest/inquest_logo.svg")
+        ) {
+            InquestTheme {
+                DecoratedWindow(
+                    closeApp = { open = false },
+                    modifier = Modifier.fillMaxSize(),
+                    minimizeApp = { windowState.isMinimized = true },
+                ) {
+                    MainView()
+                }
             }
         }
     }
@@ -129,11 +140,13 @@ private fun startWatching(di: DirectDI): (() -> Unit) {
     }
 
     return {
-        analyzerJob.interrupt()
-        loaderJob.interrupt()
+        runBlocking {
+            analyzerJob.interrupt()
+            loaderJob.interrupt()
 
-        analyzerJob.join()
-        loaderJob.join()
+            analyzerJob.join()
+            loaderJob.join()
+        }
     }
 }
 
